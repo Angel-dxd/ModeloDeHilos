@@ -8,6 +8,11 @@ data class Alumno(
     val cervezas: Int = 0, // valor por defecto
     val email: String? = null // null-safety
 )
+data class Profesor(
+    val id: Int,
+    val nombre: String,
+    val departamento: String
+)
 
 // class normal
 // Los constructores van en la cabecera
