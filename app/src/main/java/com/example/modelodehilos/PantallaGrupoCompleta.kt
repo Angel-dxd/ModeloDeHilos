@@ -61,6 +61,17 @@ fun PantallaGrupoCompleta(
     val edadFocus = remember { FocusRequester() }
     val emailFocus = remember { FocusRequester() }
 
+    // Reproductores compartidos por la pantalla
+    val reproductorAudioLargo = remember(context) { ReproductorAudioLargo(context) }
+    val reproductorEfectos = remember(context) { ReproductorEfectos(context) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            reproductorAudioLargo.liberar()
+            reproductorEfectos.liberar()
+        }
+    }
+
     val alumnosFiltrados: List<Alumno> =
         if (filtroActual == Filtro.TODOS) {
             alumnos
@@ -86,21 +97,17 @@ fun PantallaGrupoCompleta(
 
         if (nombre.isEmpty()) {
             mensaje = "Error: el nombre está vacío."
-            reproducirSonidoSiProcede(
-                context = context,
-                audioActivado = audioActivado,
-                sonidoResId = R.raw.sonido_error
-            )
+            if (audioActivado) {
+                reproductorEfectos.reproducirError()
+            }
             return
         }
 
         if (edad == null) {
             mensaje = "Error: la edad no es válida."
-            reproducirSonidoSiProcede(
-                context = context,
-                audioActivado = audioActivado,
-                sonidoResId = R.raw.sonido_error
-            )
+            if (audioActivado) {
+                reproductorEfectos.reproducirError()
+            }
             return
         }
 
@@ -115,11 +122,9 @@ fun PantallaGrupoCompleta(
 
         if (!insertado) {
             mensaje = "Error: no se pudo guardar el alumno en SQLite."
-            reproducirSonidoSiProcede(
-                context = context,
-                audioActivado = audioActivado,
-                sonidoResId = R.raw.sonido_error
-            )
+            if (audioActivado) {
+                reproductorEfectos.reproducirError()
+            }
             return
         }
 
@@ -130,11 +135,10 @@ fun PantallaGrupoCompleta(
         emailInput = ""
 
         mensaje = "Alumno añadido y guardado en SQLite: ${nuevo.nombre}"
-        reproducirSonidoSiProcede(
-            context = context,
-            audioActivado = audioActivado,
-            sonidoResId = R.raw.sonido_acierto
-        )
+        if (audioActivado) {
+            reproductorEfectos.reproducirAcierto()
+        }
+
         focusManager.clearFocus()
     }
 
@@ -369,23 +373,21 @@ fun PantallaGrupoCompleta(
         alumnosFiltrados.forEach { alumno ->
             AlumnoItem(
                 alumno = alumno,
+                audioActivado = audioActivado,
+                reproductorAudioLargo = reproductorAudioLargo,
                 onBorrarAlumno = { alumnoABorrar ->
                     val borrado = onBorrarAlumno(alumnoABorrar)
 
                     if (borrado) {
                         mensaje = "Alumno borrado de SQLite: ${alumnoABorrar.nombre}"
-                        reproducirSonidoSiProcede(
-                            context = context,
-                            audioActivado = audioActivado,
-                            sonidoResId = R.raw.sonido_acierto
-                        )
+                        if (audioActivado) {
+                            reproductorEfectos.reproducirAcierto()
+                        }
                     } else {
                         mensaje = "Error: no se pudo borrar el alumno."
-                        reproducirSonidoSiProcede(
-                            context = context,
-                            audioActivado = audioActivado,
-                            sonidoResId = R.raw.sonido_error
-                        )
+                        if (audioActivado) {
+                            reproductorEfectos.reproducirError()
+                        }
                     }
                 },
                 onEditarAlumno = { alumnoAEditar ->

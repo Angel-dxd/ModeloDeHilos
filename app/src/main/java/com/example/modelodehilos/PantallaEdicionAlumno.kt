@@ -38,6 +38,14 @@ fun PantallaEdicionAlumno(
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
 
+    val reproductorEfectos = remember(context) { ReproductorEfectos(context) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            reproductorEfectos.liberar()
+        }
+    }
+
     var mensaje by remember { mutableStateOf("") }
 
     var nombreInput by remember(alumno.id) { mutableStateOf(alumno.nombre) }
@@ -71,21 +79,17 @@ fun PantallaEdicionAlumno(
 
         if (nombre.isEmpty()) {
             mensaje = "Error: el nombre está vacío."
-            reproducirSonidoSiProcede(
-                context = context,
-                audioActivado = audioActivado,
-                sonidoResId = R.raw.sonido_error
-            )
+            if (audioActivado) {
+                reproductorEfectos.reproducirError()
+            }
             return
         }
 
         if (edad == null) {
             mensaje = "Error: la edad no es válida."
-            reproducirSonidoSiProcede(
-                context = context,
-                audioActivado = audioActivado,
-                sonidoResId = R.raw.sonido_error
-            )
+            if (audioActivado) {
+                reproductorEfectos.reproducirError()
+            }
             return
         }
 
@@ -99,7 +103,6 @@ fun PantallaEdicionAlumno(
         guardandoCambios = true
         focusManager.clearFocus()
 
-        // Lanzamos una corrutina con su propio código (en vez de llamar a una función)
         coroutineScope.launch {
             // Simulamos espera para que se note visualmente el estado de guardado
             delay(2000L)
@@ -110,11 +113,9 @@ fun PantallaEdicionAlumno(
 
             if (!actualizado) {
                 mensaje = "Error: no se pudo actualizar el alumno en SQLite."
-                reproducirSonidoSiProcede(
-                    context = context,
-                    audioActivado = audioActivado,
-                    sonidoResId = R.raw.sonido_error
-                )
+                if (audioActivado) {
+                    reproductorEfectos.reproducirError()
+                }
             }
         }
     }
